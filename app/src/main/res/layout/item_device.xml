@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/tv_name_item_device"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:text="设备名：" />
+
+    <TextView
+        android:id="@+id/tv_uuid_item_device"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:text="uuid：" />
+
+    <TextView
+        android:id="@+id/tv_address_item_device"
+        android:layout_width="match_parent"
+        android:layout_height="18dp"
+        android:text="MAC地址：" />
+</LinearLayout>

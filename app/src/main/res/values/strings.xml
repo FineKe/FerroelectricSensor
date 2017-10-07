@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">FerroelectricSensor</string>
+    <string name="startScan">扫描设备</string>
+    <string name="scaning">正在扫描...</string>
+</resources>

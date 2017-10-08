@@ -26,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.litesky.ferroelectricsensor.adapter.DeviceAdapter;
+import com.litesuits.bluetooth.LiteBluetooth;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,6 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Handler handler=null;
     private Runnable scanRunable=null;
+    private TextView test;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +74,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initEvents() {
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MainActivity.this,TestActivity.class));
+            }
+        });
+
         startScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -158,6 +168,7 @@ public class MainActivity extends AppCompatActivity {
         lv_ble_devices = ((ListView) findViewById(R.id.lv_ble_devices));
         startScan = ((TextView) findViewById(R.id.tv_start_scan));
         lv_ble_devices.setAdapter(deviceAdapter);
+        test = ((TextView) findViewById(R.id.tv_test));
     }
 
     private void startScan()

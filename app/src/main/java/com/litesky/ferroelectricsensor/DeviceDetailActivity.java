@@ -29,24 +29,35 @@ import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 import com.litesky.ferroelectricsensor.adapter.PresenterDataActivity;
 import com.litesky.ferroelectricsensor.adapter.ServiceAdapter;
+import com.litesuits.bluetooth.LiteBleGattCallback;
+import com.litesuits.bluetooth.LiteBluetooth;
+import com.litesuits.bluetooth.conn.BleCharactCallback;
+import com.litesuits.bluetooth.conn.LiteBleConnector;
+import com.litesuits.bluetooth.exception.BleException;
+import com.litesuits.bluetooth.log.BleLog;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
 public class DeviceDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "DeviceDetailActivity";
-    private static final String SERVICE_UUID="";
-    private static final String CHARACTERISTIC_UUID="";
+    private static final String SERVICE_UUID="6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    private static final String CHARACTERISTIC_UUID="6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+    private static final String DESCRIPTOR_UUID="00002902-0000-1000-8000-00805f9b34fb";
     private BluetoothDevice bluetoothDevice=null;
     private BluetoothGattCallback bluetoothGattCallback=null;
-    private BluetoothGatt bluetoothGatt=null;
+    private BluetoothGatt mBluetoothGatt=null;
 
     private BluetoothGattService gattService=null;
+    private BluetoothGattCharacteristic characteristic=null;
     private LineChart lineChart;
     private TextView startListen;
 
+    private LiteBluetooth liteBluetooth=null;
+    private LiteBleConnector connector=null;
 
     private List<Entry> entries;
     private LineDataSet lineDataSet;
@@ -110,6 +121,12 @@ public class DeviceDetailActivity extends AppCompatActivity {
             }
 
             @Override
+            public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
+                super.onCharacteristicChanged(gatt, characteristic);
+                Log.d(TAG, "onCharacteristicChanged: "+new String(characteristic.getValue()));
+            }
+
+            @Override
             public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                 super.onConnectionStateChange(gatt, status, newState);
                 if (status== BluetoothGatt.GATT_SUCCESS)
@@ -132,6 +149,7 @@ public class DeviceDetailActivity extends AppCompatActivity {
                 {
                     Log.d(TAG, "onServicesDiscovered: 已发现服务");
                     gattService=gatt.getService(UUID.fromString(SERVICE_UUID));
+                    characteristic=gattService.getCharacteristic(UUID.fromString(CHARACTERISTIC_UUID));
                 }
             }
 
@@ -140,15 +158,14 @@ public class DeviceDetailActivity extends AppCompatActivity {
                 super.onCharacteristicRead(gatt, characteristic, status);
                 if (status==BluetoothGatt.GATT_SUCCESS)
                 {
-                    Log.d(TAG, "onCharacteristicRead: 有新数据");
-                    dataCharacteristic=characteristic;
-                    handler.sendEmptyMessage(0);
+                    Log.d(TAG, "onCharacteristicRead: "+Arrays.toString(characteristic.getValue()));
                 }
+                Log.d(TAG, "onCharacteristicRead: ");
 
             }
         };
 
-        bluetoothDevice.connectGatt(this,false,bluetoothGattCallback);
+        mBluetoothGatt=bluetoothDevice.connectGatt(this,false,bluetoothGattCallback);
         entries=new ArrayList<>();
         lineDataSet=new LineDataSet(entries,"label");
         lineData=new LineData(lineDataSet);
@@ -160,20 +177,22 @@ public class DeviceDetailActivity extends AppCompatActivity {
         super.onDestroy();
 
         //断开连接
-        if (bluetoothGatt!=null)
+        if (mBluetoothGatt!=null)
         {
-            bluetoothGatt.disconnect();
+            mBluetoothGatt.disconnect();
         }
 
     }
 
     public void setListen()
     {
-        BluetoothGattCharacteristic characteristic=gattService.getCharacteristic(UUID.fromString(CHARACTERISTIC_UUID));
-        bluetoothGatt.setCharacteristicNotification(characteristic,true);
-        BluetoothGattDescriptor descriptor=characteristic.getDescriptor(UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+
+        mBluetoothGatt.setCharacteristicNotification(characteristic,true);
+        BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
+                UUID.fromString(DESCRIPTOR_UUID));
         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        bluetoothGatt.writeDescriptor(descriptor);
+        mBluetoothGatt.writeDescriptor(descriptor);
+        mBluetoothGatt.readCharacteristic(characteristic);
     }
 
     private Handler handler=new Handler()
@@ -184,6 +203,8 @@ public class DeviceDetailActivity extends AppCompatActivity {
             switch (msg.what)
             {
                 case 0:up(lineData,xAxis,dataCharacteristic);
+                    break;
+                case 1:
                     break;
             }
         }
@@ -202,5 +223,6 @@ public class DeviceDetailActivity extends AppCompatActivity {
 //        a++;
 //        xAxis.setAxisMinValue(a);
     }
+
 
 }
